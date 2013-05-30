@@ -1,11 +1,34 @@
 #! /usr/bin/python3
 
 import os, urllib.request, time
+import ansicolors
+import sys
 
-f = urllib.request.urlopen( "http://download.finance.yahoo.com/d/quotes.csv?s=YHOO+GOOG&f=sl1d1t1c1ohgv&e=.csv" )
+def printFeed( feed, columns ):
+	splitFeed = feed.split( '|' )
 
-#for line in f:
-#	print( line )
+	newFeed = ''
+	for item in splitFeed:
+		if '+' in item:
+			newFeed = newFeed + ansicolors.AnsiColors.FG_GREEN + item + ansicolors.AnsiColors.FG_WHITE + '|'
+		elif '-' in item:
+			newFeed = newFeed + ansicolors.AnsiColors.FG_RED + item + ansicolors.AnsiColors.FG_WHITE + '|'
+		else:
+			newFeed = newFeed + ansicolors.AnsiColors.FG_BLACK + item + ansicolors.AnsiColors.FG_WHITE + '|'
+	
+	print( newFeed[:columns + 22] );
+
+params = ''
+if len( sys.argv ) > 1:
+	for arg in sys.argv:
+		params = params + arg + '+'
+	
+	params = params[:len( params ) - 1]
+else:
+	params = 'GOOG+MSFT'
+
+url = "http://download.finance.yahoo.com/d/quotes.csv?s=" + params + "&f=sl1d1t1c1ohgv&e=.csv" 
+f = urllib.request.urlopen( url )
 
 feed = f.read().decode( "utf-8" ).replace( ',', ' ' ).replace( '\r\n', ' | ' )
 
@@ -17,7 +40,9 @@ while True:
 	feed = feed[1:]
 	feed = feed + startChar
 	truncFeed = feed[:int( columns )]
-#print( feed.replace( '\r\n', ' | ' ) )
-	print( truncFeed )
+
+	printFeed( truncFeed, int( columns ) )	
 	time.sleep( 0.3 );
+#	if count == 30:
+#		f = 
 	os.popen( 'clear', 'w' )
