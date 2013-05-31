@@ -51,6 +51,7 @@ def main():
 	tickerList = []
 	params = ''
 	if len( sys.argv ) > 1:
+		symbols = sys.argv.remove( sys.argv[0] )
 		for arg in sys.argv:
 			params = params + arg + '+'
 		
