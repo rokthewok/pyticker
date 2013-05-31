@@ -3,46 +3,77 @@
 import os, urllib.request, time
 import ansicolors
 import sys
+import tickeritem
 
-def printFeed( feed, columns ):
+def printFeed( tickerList, columns ):
+	newFeed = ''
+	length = 0
+	for item in tickerList:
+		newFeed = newFeed + item.getFormattedData() + ansicolors.AnsiColors.FG_WHITE + '|'
+		length = length + len( item.getFormattedData() ) - 7
+		if( length > columns ):
+			break
+
+	tickerList[0].incrementOffset()
+
+	print( newFeed[:columns] );
+	
+	cleanList( tickerList )
+
+def formatFeed( feed ):
+	return feed.read().decode( "utf-8" ).replace( ',', ' ' ).replace( '\r\n', ' | ' )
+
+def cleanList( tickerList ):
+	for item in tickerList:
+		if item.isFedThrough():
+			tickerList.remove( item )
+
+def updateList( tickerList, feed ):
 	splitFeed = feed.split( '|' )
 
-	newFeed = ''
+	for item in tickerList:
+		if item.isFedThrough():
+			tickerList.remove( item )
+
 	for item in splitFeed:
-		if '+' in item:
-			newFeed = newFeed + ansicolors.AnsiColors.FG_GREEN + item + ansicolors.AnsiColors.FG_WHITE + '|'
-		elif '-' in item:
-			newFeed = newFeed + ansicolors.AnsiColors.FG_RED + item + ansicolors.AnsiColors.FG_WHITE + '|'
-		else:
-			newFeed = newFeed + ansicolors.AnsiColors.FG_BLACK + item + ansicolors.AnsiColors.FG_WHITE + '|'
-	
-	print( newFeed[:columns + 22] );
+		tickerList.append( tickeritem.TickerItem( item ) )
 
-params = ''
-if len( sys.argv ) > 1:
-	for arg in sys.argv:
-		params = params + arg + '+'
-	
-	params = params[:len( params ) - 1]
-else:
-	params = 'GOOG+MSFT'
 
-url = "http://download.finance.yahoo.com/d/quotes.csv?s=" + params + "&f=sl1d1t1c1ohgv&e=.csv" 
-f = urllib.request.urlopen( url )
+def main():
+	os.popen( 'tput civis', 'w' )
 
-feed = f.read().decode( "utf-8" ).replace( ',', ' ' ).replace( '\r\n', ' | ' )
+	tickerList = []
+	params = ''
+	if len( sys.argv ) > 1:
+		for arg in sys.argv:
+			params = params + arg + '+'
+		
+		params = params[:len( params ) - 1]
+	else:
+		params = 'GOOG+MSFT'
 
-os.popen( 'clear', 'w' )
-while True:
-	rows, columns = os.popen( 'stty size', 'r' ).read().split()
-	
-	startChar = feed[:1]
-	feed = feed[1:]
-	feed = feed + startChar
-	truncFeed = feed[:int( columns )]
+	url = "http://download.finance.yahoo.com/d/quotes.csv?s=" + params + "&f=sl1d1t1c1ohgv&e=.csv" 
+	f = urllib.request.urlopen( url )
 
-	printFeed( truncFeed, int( columns ) )	
-	time.sleep( 0.3 );
-#	if count == 30:
-#		f = 
+	feed = formatFeed( f )
+	updateList( tickerList, feed )
+
 	os.popen( 'clear', 'w' )
+	count = 0
+	while True:
+		rows, columns = os.popen( 'stty size', 'r' ).read().split()
+
+		printFeed( tickerList, int( columns ) )	
+		time.sleep( 0.2 );
+		if count == 30:
+			f = urllib.request.urlopen( url )
+			feed = formatFeed( f )
+			updateList( tickerList, feed )
+			count = 0
+		os.popen( 'clear', 'w' )
+		count = count + 1
+	
+	os.popen( 'tput cnorm', 'w' )
+
+if __name__ == "__main__":
+	main()
