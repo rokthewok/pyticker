@@ -1,10 +1,12 @@
 PyTicker
 --------
 
-A terminal stock ticker. Invoke using
+A terminal stock ticker.
 
+Dependencies: Python 3.x
+
+Invoke using  
 	python3 pyticker.py [SYMBOLS]
-
 where `[SYMBOLS]` are the stock symbols, seperated by spaces, you wish to monitor.
 
 Output is seperated by pipes, with the fields of each item being the symbol, last trade time, last trade value, point and percentage change, and volume.
