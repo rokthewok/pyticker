@@ -4,6 +4,7 @@ import os, urllib.request, time
 import ansicolors
 import sys
 import tickeritem
+import signal
 
 def printFeed( tickerList, columns ):
 	newFeed = ''
@@ -38,8 +39,13 @@ def updateList( tickerList, feed ):
 	for item in splitFeed:
 		tickerList.append( tickeritem.TickerItem( item ) )
 
+def cleanUp( signal, frame ):
+	os.popen( 'clear', 'w' )
+	os.popen( 'tput cnorm', 'w' )
+	sys.exit( 0 )
 
 def main():
+	signal.signal( signal.SIGINT, cleanUp )
 	os.popen( 'tput civis', 'w' )
 
 	tickerList = []
@@ -73,7 +79,6 @@ def main():
 		os.popen( 'clear', 'w' )
 		count = count + 1
 	
-	os.popen( 'tput cnorm', 'w' )
 
 if __name__ == "__main__":
 	main()
