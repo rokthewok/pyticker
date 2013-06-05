@@ -8,16 +8,16 @@ import signal
 
 def printFeed( tickerList, columns ):
 	newFeed = ''
-	length = 0
+	count = 0
 	for item in tickerList:
 		newFeed = newFeed + item.getFormattedData() + ansicolors.AnsiColors.FG_WHITE + '|'
-		length = length + len( item.getFormattedData() ) - 7
-		if( length > columns ):
+		count = count + 1
+		if count > 10:
 			break
 
 	tickerList[0].incrementOffset()
 
-	print( ansicolors.AnsiColors.BG_BLACK + newFeed[:columns] );
+	print( ansicolors.AnsiColors.BG_BLACK + newFeed[:columns + ( count * 3 )] );
 	
 	cleanList( tickerList )
 
@@ -72,7 +72,7 @@ def main():
 
 		printFeed( tickerList, int( columns ) )	
 		time.sleep( 0.2 );
-		if count == 30:
+		if count == 10:
 			f = urllib.request.urlopen( url )
 			feed = formatFeed( f )
 			updateList( tickerList, feed )
