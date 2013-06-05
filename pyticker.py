@@ -17,7 +17,7 @@ def printFeed( tickerList, columns ):
 
 	tickerList[0].incrementOffset()
 
-	print( newFeed[:columns] );
+	print( ansicolors.AnsiColors.BG_BLACK + newFeed[:columns] );
 	
 	cleanList( tickerList )
 
