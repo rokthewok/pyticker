@@ -15,9 +15,11 @@ def printFeed( tickerList, columns ):
 		if count > 10:
 			break
 
+	count = count - 1
 	tickerList[0].incrementOffset()
 
 	print( ansicolors.AnsiColors.BG_BLACK + newFeed[:columns + ( count * 3 )] );
+	#os.popen( 'echo -e "\r\033[K"', 'w' )
 	
 	cleanList( tickerList )
 
@@ -72,7 +74,7 @@ def main():
 
 		printFeed( tickerList, int( columns ) )	
 		time.sleep( 0.2 );
-		if count == 10:
+		if count == 20:
 			f = urllib.request.urlopen( url )
 			feed = formatFeed( f )
 			updateList( tickerList, feed )
