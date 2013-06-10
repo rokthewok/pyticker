@@ -5,6 +5,9 @@ import ansicolors
 import sys
 import tickeritem
 import signal
+import stockthread
+import tickercleanup
+from stockutils import formatFeed, updateList
 
 def printFeed( tickerList, columns ):
 	newFeed = ''
@@ -18,28 +21,15 @@ def printFeed( tickerList, columns ):
 	count = count - 1
 	tickerList[0].incrementOffset()
 
-	print( ansicolors.AnsiColors.BG_BLACK + newFeed[:columns + ( count * 3 )] );
+	print( ansicolors.AnsiColors.BG_BLACK + newFeed[:columns + ( count * 2 )] );
 	#os.popen( 'echo -e "\r\033[K"', 'w' )
 	
 	cleanList( tickerList )
-
-def formatFeed( feed ):
-	return feed.read().decode( "utf-8" ).replace( ',', ' ' ).replace( '\r\n', ' | ' )
 
 def cleanList( tickerList ):
 	for item in tickerList:
 		if item.isFedThrough():
 			tickerList.remove( item )
-
-def updateList( tickerList, feed ):
-	splitFeed = feed.split( '|' )
-
-	for item in tickerList:
-		if item.isFedThrough():
-			tickerList.remove( item )
-
-	for item in splitFeed:
-		tickerList.append( tickeritem.TickerItem( item ) )
 
 def cleanUp( signal, frame ):
 	os.popen( 'clear', 'w' )
@@ -47,10 +37,12 @@ def cleanUp( signal, frame ):
 	sys.exit( 0 )
 
 def main():
-	signal.signal( signal.SIGINT, cleanUp )
 	os.popen( 'tput civis', 'w' )
 
+
 	tickerList = []
+
+
 	params = ''
 	if len( sys.argv ) > 1:
 		symbols = sys.argv.remove( sys.argv[0] )
@@ -67,6 +59,12 @@ def main():
 	feed = formatFeed( f )
 	updateList( tickerList, feed )
 
+	stockThread = stockthread.StockThread( tickerList, url )
+	cu = tickercleanup.CleanUp( stockThread )
+	signal.signal( signal.SIGINT, cu.clean_up )
+
+	stockThread.start()
+
 	os.popen( 'clear', 'w' )
 	count = 0
 	while True:
@@ -74,11 +72,7 @@ def main():
 
 		printFeed( tickerList, int( columns ) )	
 		time.sleep( 0.2 );
-		if count == 20:
-			f = urllib.request.urlopen( url )
-			feed = formatFeed( f )
-			updateList( tickerList, feed )
-			count = 0
+		
 		os.popen( 'clear', 'w' )
 		count = count + 1
 	
